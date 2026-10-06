@@ -12,6 +12,7 @@ ll dist2[1001][1001];
 
 void solution()
 {
+    
 }
 
 int main()
