@@ -1,0 +1,40 @@
+# ===== OS =====
+# macOS
+.DS_Store
+._*
+# Windows
+Thumbs.db
+desktop.ini
+# WSL에서 윈도우 파일 복사 시 생기는 찌꺼기
+*:Zone.Identifier
+
+# ===== Editor / IDE =====
+.vscode/
+.idea/
+*.swp
+*~
+
+# ===== C / C++ build artifacts =====
+*.o
+*.obj
+*.out
+*.exe
+*.a
+*.so
+*.dll
+build/
+cmake-build-*/
+core
+core.*
+
+# ===== Python =====
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ===== Etc =====
+*.log
+.env
+# 강의자료 PDF (저작권 + 용량)
+*.pdf
