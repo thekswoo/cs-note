@@ -1,0 +1,35 @@
+# 빌드 결과물
+*.out
+*.o
+*.a
+*.so
+build/
+bin/
+
+# CUDA 중간 파일
+*.ptx
+*.cubin
+*.fatbin
+
+# 프로파일링 결과 (nsys, ncu, gprof)
+*.nsys-rep
+*.qdrep
+*.ncu-rep
+*.sqlite
+gmon.out
+
+# 클러스터 잡 로그 (SLURM, PBS)
+slurm-*.out
+*.o[0-9]*
+*.e[0-9]*
+
+# 디버깅 / 코어 덤프
+core
+core.*
+vgcore.*
+
+# 에디터 / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
