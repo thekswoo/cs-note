@@ -22,8 +22,8 @@ cs-note/
 |---|---|---|---|
 | 병렬 프로그래밍 | [`parallel-programming`](2026-2/parallel-programming) | C11 threads, OpenMP, CUDA, MPI | 🟢 진행 중 |
 | 문제해결기법 | [`problem-solving`](2026-2/problem-solving) | C/C++, 자료구조·알고리즘, DOMjudge | 🟢 진행 중 |
-| 컴퓨터구조론 | `computer-architecture` | RISC-V ISA, Pipelining, Memory Hierarchy | ⚪ 예정 |
-| 임베디드소프트웨어 | `embedded-software` | avr-gcc, Real-time Scheduling, Embedded Board | ⚪ 예정 |
+| 컴퓨터구조론 | `computer-architecture` | RISC-V ISA, Pipelining, Memory Hierarchy | 🟢 진행 중 |
+| 임베디드소프트웨어 | [`embedded-software`](2026-2/embedded-software) | avr-gcc, Real-time Scheduling, Embedded Board | ⚪ 예정 |
 | 모빌리티 임베디드시스템설계 | `mobility-embedded` | Raspberry Pi, Linux, Python/C, GPIO/PWM, OpenCV, SDV | ⚪ 예정 |
 
 ## Environment
