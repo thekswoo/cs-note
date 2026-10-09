@@ -17,7 +17,7 @@ void solve()
     ll N, M;
     ll ans = 0;
     cin >> N >> M;
-    vector<ll> a(N), b(N);
+    vector<ll> a(M), b(M);
     priority_queue<ll> pq;
     for(int i=0; i<M; i++){
         cin >> a[i];
@@ -32,7 +32,7 @@ void solve()
         pq.push(rest % b[i]);
     }
 
-    while(N--){
+    while(N-- && !pq.empty()){
         ans += pq.top();
         pq.pop();
     }
