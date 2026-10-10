@@ -5,7 +5,7 @@
 #include <algorithm>
 
 using namespace std;
-
+#define SDIV(x, y) (((x) + (y) - 1) / (y))
 template <typename value_t, typename index_t>
 void init(vector<value_t> &A, vector<value_t> &x, index_t m, index_t n)
 {
@@ -80,7 +80,7 @@ void cyclic_parallel_mult(vector<value_t> &A, vector<value_t> &x, vector<value_t
             value_t accum = value_t(0);
             for (index_t col = 0; col < n; col++)
             {
-                accum += A[row * id + col] * x[col];
+                accum += A[row * n + col] * x[col];
             }
             B[row] = accum;
         }
@@ -91,6 +91,36 @@ void cyclic_parallel_mult(vector<value_t> &A, vector<value_t> &x, vector<value_t
         threads.emplace_back(cyclic, id);
     for (auto &thread : threads)
         thread.join();
+}
+
+template <typename value_t, typename index_t>
+void block_cyclic_parallel_mul(vector<value_t> &A, vector<value_t> &x,
+                               vector<value_t> &B, index_t m, index_t n, index_t num_threads = 8,
+                               index_t chunk_size = 64 / sizeof(value_t))
+{
+    auto block_cyclic = [&](const index_t &id) -> void
+    {
+        const index_t offset = id * chunk_size;          // 중요 : 각 thread별 시작점
+        const index_t stride = num_threads * chunk_size; // 중요 : 각 thread가 다음 cycle에 받을 시작점
+
+        for (index_t lower = offset; lower < m; lower += stride)
+        {
+            const index_t upper = min(lower + chunk_size, m);
+            for (index_t row = lower; row < upper; row++)
+            {
+                value_t accum = value_t(0);
+                for (index_t col = 0; col < n; col++)
+                {
+                    accum += A[row * n + col] * x[col];
+                }
+                B[row] = accum;
+            }
+        }
+    };
+
+    vector<thread> threads;
+    for(index_t id = 0; id<num_threads; id++) threads.emplace_back(block_cyclic, id);
+    for(auto& thread : threads) thread.join();
 }
 
 int main()
@@ -105,6 +135,6 @@ int main()
     init(A, x, m, n);
 
     sequential(A, x, B, m, n);
-    // block_parallel_mult(A, x, B, m, n);
+    block_parallel_mult(A, x, B, m, n);
     cyclic_parallel_mult(A, x, B, m, n);
 }

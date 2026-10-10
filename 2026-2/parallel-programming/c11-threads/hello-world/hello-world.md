@@ -1,11 +1,9 @@
-### 실행 과정
+### 컴파일
 `g++ -O2 -std=c++11 -pthread hello-world.cpp -o hello-world.out`
 - `-O2` : 일반적인 최적화.
 - `-std=c++11` : c++11 문법과 라이브러리를 사용
 - `-pthread` : `std::thread`가 내부적으로 posix thread를 사용해서 해당 라이브러리랑 연결
 - `-o 이름.out`:출력 파일 이름 지정. output의 약자임.
-
-
 
 ### 실행 결과
 ```bash
