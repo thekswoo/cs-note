@@ -44,7 +44,8 @@ Hello from thread: 2
 Hello from thread: 3
 ```
 
-### 분석1
+### 분석
+#### 1. 
 출력 결과를 확인해보면 thread간의 함수 호출이 섞여서 출력됐다.
 
 - `cout << "Hello from thread: " << id << endl;`은 실제로 **독립된 출력 호출 3번**이다.
@@ -54,7 +55,7 @@ Hello from thread: 3
 이처럼 **실행 타이밍에 따라 결과가 달라지는 것이 race condition**이다.
 출력 구간이 critical section이며, `mutex`로 상호 배제하면 해결할 수 있다.
 
-### 분석2
+#### 2. 
 thread 출력 순서가 실행할때마다 항상 달라진다.
 
 - `condition_variable`으로 순서를 강제하는 방법

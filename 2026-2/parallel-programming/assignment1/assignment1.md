@@ -55,3 +55,133 @@ $$\pi \approx 4 \times \frac{count}{N}$$
 
 > [!warning]
 > 슬라이드에는 "2025/10/24 Friday"로 적혀 있지만 2026년 10/24는 토요일이다. 실제 마감일은 I-Class에서 확인할 것.
+
+
+## 결과
+
+### colab 환경
+```bash
+===========================================
+[Result] single thread
+
+Number of threads = 1
+#time (counter): 2.7972584190s
+#count        = 78537856
+#estimated pi = 3.1415142400
+#error        = 0.0000784136
+#error rate   = 0.0024959821 %
+
+===========================================
+[Result] multi thread by local count
+
+Number of threads = 2
+#time (counter): 2.1037537120s
+#count        = 78540214
+#estimated pi = 3.1416085600
+#error        = 0.0000159064
+#error rate   = 0.0005063168 %
+
+Number of threads = 4
+#time (counter): 2.2060252320s
+#count        = 78534440
+#estimated pi = 3.1413776000
+#error        = 0.0002150536
+#error rate   = 0.0068453684 %
+
+Number of threads = 8
+#time (counter): 3.4550341010s
+#count        = 78540953
+#estimated pi = 3.1416381200
+#error        = 0.0000454664
+#error rate   = 0.0014472408 %
+
+Number of threads = 16
+#time (counter): 2.3015422030s
+#count        = 78541897
+#estimated pi = 3.1416758800
+#error        = 0.0000832264
+#error rate   = 0.0026491789 %
+
+Number of threads = 32
+#time (counter): 2.1339831740s
+#count        = 78543106
+#estimated pi = 3.1417242400
+#error        = 0.0001315864
+#error rate   = 0.0041885255 %
+
+===========================================
+[Result] multi thread by global count and no mutex
+
+Number of threads = 2
+#time (counter): 2.4578805880s
+#count        = 75616750
+#estimated pi = 3.0246700000
+#error        = 0.1169226536
+#error rate   = 3.7217636556 %
+
+Number of threads = 4
+#time (counter): 2.3908780300s
+#count        = 75539537
+#estimated pi = 3.0215814800
+#error        = 0.1200111736
+#error rate   = 3.8200743006 %
+
+Number of threads = 8
+#time (counter): 3.1018618830s
+#count        = 76526613
+#estimated pi = 3.0610645200
+#error        = 0.0805281336
+#error rate   = 2.5632901038 %
+
+Number of threads = 16
+#time (counter): 3.1592232420s
+#count        = 76684026
+#estimated pi = 3.0673610400
+#error        = 0.0742316136
+#error rate   = 2.3628656473 %
+
+Number of threads = 32
+#time (counter): 2.5338366690s
+#count        = 75551721
+#estimated pi = 3.0220688400
+#error        = 0.1195238136
+#error rate   = 3.8045611500 %
+
+===========================================
+[Result] multi thread by global count and yes mutex
+
+Number of threads = 2
+#time (counter): 4.7959720220s
+#count        = 78540214
+#estimated pi = 3.1416085600
+#error        = 0.0000159064
+#error rate   = 0.0005063168 %
+
+Number of threads = 4
+#time (counter): 5.6694773090s
+#count        = 78534440
+#estimated pi = 3.1413776000
+#error        = 0.0002150536
+#error rate   = 0.0068453684 %
+
+Number of threads = 8
+#time (counter): 4.7337433910s
+#count        = 78540953
+#estimated pi = 3.1416381200
+#error        = 0.0000454664
+#error rate   = 0.0014472408 %
+
+Number of threads = 16
+#time (counter): 4.9075321230s
+#count        = 78541897
+#estimated pi = 3.1416758800
+#error        = 0.0000832264
+#error rate   = 0.0026491789 %
+
+Number of threads = 32
+#time (counter): 5.6249267930s
+#count        = 78543106
+#estimated pi = 3.1417242400
+#error        = 0.0001315864
+#error rate   = 0.0041885255 %
+```
