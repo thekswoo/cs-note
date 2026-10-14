@@ -34,7 +34,7 @@ void solution()
         int cur = q.front();
         q.pop();
 
-        if (adj[cur].empty())
+        if (adj[cur].empty()) // cur의 인접 정점이 없다면 외곽 건물 -> YES 출력
         {
             cout << "YES\n";
             return;
@@ -42,7 +42,7 @@ void solution()
 
         for(int nxt : adj[cur])
         {
-            if (!gongsa[nxt] && !visited[nxt]) // nxt가 공사중이 아니면 q에 push
+            if (!gongsa[nxt] && !visited[nxt]) // nxt가 공사중이 아니고 방문하지도 않았다면 q에 push
             {
                 q.push(nxt);
                 visited[nxt] = 1;
