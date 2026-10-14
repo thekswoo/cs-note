@@ -49,9 +49,9 @@ OS_FLAG_GRP *s_grp;
 OS_FLAG_GRP *r_grp;
 
 int send_array[4];
-char receive_array[4];
+char recevie_array[4];
 
-INT8U select = 3; // mailbox: 1, message queue: 2
+INT8U select = 2; // mailbox: 1, message queue: 2
 
 /*
 *********************************************************************************************************
@@ -345,7 +345,7 @@ void Task(void *pdata)
 				else if (select == 3)
 				{
 					OSSemPend(sem, 0, &err);
-					receive_array[i] = push_letter;
+					recevie_array[i] = push_letter;
 					OSSemPost(sem);
 				}
 			}
@@ -394,7 +394,7 @@ void Task(void *pdata)
 				OSFlagPend(r_grp, (OS_FLAGS)(1 << task_number), OS_FLAG_WAIT_SET_ALL + OS_FLAG_CONSUME, 0, &err); // 결과 대기
 
 				OSSemPend(sem, 0, &err);
-				get_letter = receive_array[task_number];
+				get_letter = recevie_array[task_number];
 				OSSemPost(sem);
 			}
 

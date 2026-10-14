@@ -7,6 +7,7 @@
 *                                           All Rights Reserved
 *
 *                                               EXAMPLE #2
+*                         7주차 자유과제: Event flag / Semaphore / Mailbox / Q 종합 (GEN task 4개)
 *********************************************************************************************************
 */
 
@@ -19,7 +20,11 @@
 */
 
 #define TASK_STK_SIZE 512 /* Size of each task's stacks (# of WORDs)       */
-#define N_TASK 5
+#define N_TASK 6          /* DISPLAY 1 + CALC 1 + GEN 4                   */
+#define N_GEN 4           /* GEN task 개수 (N_TASK - 2)                   */
+
+/* task 1 ~ N_TASK-1 의 bit 전체 : 0011 1110 = 0x3E (bit 0 = DISPLAY 제외) */
+#define DONE_FLAG_ALL ((OS_FLAGS)(((1 << N_TASK) - 1) & ~0x01))
 
 /*
 *********************************************************************************************************
@@ -31,27 +36,24 @@ OS_STK TaskStartStk[TASK_STK_SIZE];
 OS_STK TaskStk[N_TASK][TASK_STK_SIZE];
 char TaskData[N_TASK];
 
-OS_EVENT randomsem;
+/* select == 1 : mailbox */
+OS_EVENT *mbox_to_calc[N_GEN];
+OS_EVENT *mbox_to_disp;
 
-// 아래 부분도 시험에서 알아야 함
+/* select == 2 : message queue (자유과제) */
+OS_EVENT *queue_to_calc;
+OS_EVENT *queue_to_disp;
+void *calc_queue[N_GEN];
+void *disp_queue[1];
 
-OS_EVENT *mbox_to_random[4];
-OS_EVENT *mbox_to_decision[4];
-
-OS_EVENT *queue_to_random;
-OS_EVENT *queue_to_decision;
-
-void *decision_queue[4];
-void *random_queue[4];
-
+/* 공통 */
 OS_EVENT *sem;
-OS_FLAG_GRP *s_grp;
-OS_FLAG_GRP *r_grp;
+OS_FLAG_GRP *done_grp;
 
-int send_array[4];
-char receive_array[4];
+INT8U select = 1; // mailbox: 1, message queue: 2
 
-INT8U select = 3; // mailbox: 1, message queue: 2
+/* GEN i 가 최댓값일 때 보낼 문자 : GEN0 'R', GEN1 'B', GEN2 'G', GEN3 'P'(보라) */
+const char gen_letter[N_GEN] = {'R', 'B', 'G', 'P'};
 
 /*
 *********************************************************************************************************
@@ -74,10 +76,6 @@ static void TaskStartDisp(void);
 
 void main(void)
 {
-	OS_STK *ptos;
-	OS_STK *pbos;
-	INT32U size;
-
 	PC_DispClrScr(DISP_FGND_WHITE + DISP_BGND_BLACK); /* Clear the screen                         */
 
 	OSInit(); /* Initialize uC/OS-II                      */
@@ -103,6 +101,7 @@ static void TaskStart(void *pdata)
 #endif
 	INT16S key;
 	INT8U i;
+	INT8U err;
 
 	pdata = pdata; /* Prevent compiler warning                 */
 
@@ -117,26 +116,20 @@ static void TaskStart(void *pdata)
 
 	if (select == 1)
 	{
-		// Create each of the 4 mailboxes using OSMboxCreate(0) (your code)
-		for (i = 0; i < 4; i++)
+		for (i = 0; i < N_GEN; i++)
 		{
-			mbox_to_random[i] = OSMboxCreate(0);
-			mbox_to_decision[i] = OSMboxCreate(0);
+			mbox_to_calc[i] = OSMboxCreate(0);
 		}
+		mbox_to_disp = OSMboxCreate(0);
 	}
 	else if (select == 2)
 	{
-		// Create message queue (your code)
-		queue_to_decision = OSQCreate(&decision_queue[0], 4);
-		queue_to_random = OSQCreate(&random_queue[0], 4);
+		queue_to_calc = OSQCreate(&calc_queue[0], N_GEN);
+		queue_to_disp = OSQCreate(&disp_queue[0], 1);
 	}
-	else if (select == 3)
-	{ // event flag
-		INT8U err;
-		sem = OSSemCreate(1);
-		s_grp = OSFlagCreate(0x00, &err);
-		r_grp = OSFlagCreate(0x00, &err);
-	}
+
+	sem = OSSemCreate(1);
+	done_grp = OSFlagCreate(0x00, &err);
 
 	TaskStartCreateTasks(); /* Create all other tasks                   */
 
@@ -257,182 +250,180 @@ static void TaskStartCreateTasks(void)
 	}
 }
 
+/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                                 TASK
+*********************************************************************************************************
+*/
+
 void Task(void *pdata)
 {
 	INT8U err;
-
-	INT8U push_number;
-	int get_number[4];
-
 	INT8U i, j;
 
-	INT8U min; // Variable to store the minimum value
-	INT8U min_task;
-	int task_number = (int)(*(char *)pdata - 48); // index of each task (Since pdata is of char type, subtracting 48 (ASCII '0') converts it to an int)
+	int task_number = (int)(*(char *)pdata - '0'); /* 0 ~ 5 */
+	int gen_index = task_number - 2;			   /* GEN task 전용: 0 ~ 3 */
+
+	INT8U push_number;
+	INT8U get_number[N_GEN];
+	INT8U max;
+	INT8U max_task;
+	INT8U same; /* 같은 숫자가 하나라도 있으면 1 */
 
 	char push_letter;
 	char get_letter;
-
 	int fgnd_color, bgnd_color;
+	char s[10];
 
-	char s[10]; //
-
-	// If pdata is 0-3, it's a random task, if it's 4, decision task.
-	if (*(char *)pdata == '4')
-	{ // decision task
+	if (task_number == 0)
+	{
+		/* =============================== DISPLAY TASK (priority 1) =============================== */
 		for (;;)
 		{
-			if (select == 3) // event flag
-			{ 
-				// 4개 다 보낼 때까지 대기
-				OSFlagPend(s_grp, 0x0F, OS_FLAG_WAIT_SET_ALL + OS_FLAG_CONSUME, 0, &err);
-				OSSemPend(sem, 0, &err);
-				for (i = 0; i < N_TASK - 1; i++)
-				{
-					get_number[i] = send_array[i];
-				}
-				OSSemPost(sem);
-			}
-			else
+			// CALC task로부터 문자 수신
+			if (select == 1) // mail box
 			{
-				for (i = 0; i < N_TASK - 1; i++)
-				{
-					if (select == 1)
-					{
-						// Wait until the random number arrives. Store the value in the get_number array. (your code)
-						get_number[i] = (int)OSMboxPend(mbox_to_decision[i], 0, &err);
-					}
-					else if (select == 2)
-					{
-						// Wait until the random number arrives. Store the value in the get_number array. (your code)
-						get_number[i] = (int)OSQPend(queue_to_decision, 0, &err);
-					}
-				}
+				get_letter = *(char *)OSMboxPend(mbox_to_disp, 0, &err);
 			}
-
-			min = get_number[0];
-			min_task = 0;
-			for (i = 1; i < N_TASK - 1; i++)
+			else if (select == 2) // message queue
 			{
-				// Find the smallest number among the 4 random numbers sent by the random tasks.
-				if (get_number[i] < min)
-				{
-					min = get_number[i];
-					min_task = i;
-				}
-			}
-			for (i = 0; i < N_TASK - 1; i++)
-			{
-				if (i == min_task)
-				{
-					push_letter = 'W';
-				}
-				else
-				{
-					push_letter = 'L';
-				}
-
-				if (select == 1)
-				{
-					// Send W or L to the random task. (your code)
-					OSMboxPost(mbox_to_random[i], &push_letter);
-				}
-				else if (select == 2)
-				{
-					// Send W or L to the random task. (your code)
-					OSQPost(queue_to_random, &push_letter);
-				}
-				else if (select == 3)
-				{
-					OSSemPend(sem, 0, &err);
-					receive_array[i] = push_letter;
-					OSSemPost(sem);
-				}
+				get_letter = *(char *)OSQPend(queue_to_disp, 0, &err);
 			}
 
-			if (select == 3) // event flag
-			{ 
-				OSFlagPost(r_grp, 0x0F, OS_FLAG_SET, &err); // 모두 쓴 뒤 한번에 알림
-			}
-			OSTimeDlyHMSM(0, 0, 5, 0);
-		}
-	}
-	else
-	{ // random task
-		for (;;)
-		{
-			push_number = random(64);
-			sprintf(s, "%2d", push_number);
-
-			PC_DispStr(0 + 18 * task_number, 4, "task", DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
-			PC_DispChar(4 + 18 * task_number, 4, *(char *)pdata, DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
-			PC_DispStr(6 + 18 * task_number, 4, s, DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
-
-			if (select == 1)
-			{
-				// Post to the decision task and wait with pend. (your code)
-				// 메일 박스 팬드해서
-				// 메일 박스 펜드가 있으니 쉼 0, 1, 2, 3까지 post 후 pend해서 넘어감
-				OSMboxPost(mbox_to_decision[task_number], &push_number);
-				get_letter = (char)OSMboxPend(mbox_to_random[task_number], 0, &err);
-			}
-			else if (select == 2)
-			{
-				// Post to the decision task and wait with pend. (your code)
-				// 디시젼 태스크에 메일 박스를 포스트함
-				OSQPost(queue_to_decision, &push_number);
-				get_letter = (char)OSQPend(queue_to_random, 0, &err);
-			}
-
-			else if (select == 3)
-			{ // event flag
-				OSSemPend(sem, 0, &err);
-				send_array[task_number] = push_number;
-				OSSemPost(sem);
-
-				OSFlagPost(s_grp, (OS_FLAGS)(1 << task_number), OS_FLAG_SET, &err); // 보냈음 자기 task만큼 shift해서
-				OSFlagPend(r_grp, (OS_FLAGS)(1 << task_number), OS_FLAG_WAIT_SET_ALL + OS_FLAG_CONSUME, 0, &err); // 결과 대기
-
-				OSSemPend(sem, 0, &err);
-				get_letter = receive_array[task_number];
-				OSSemPost(sem);
-			}
-
-			if (*(char *)pdata == '0')
-			{
-				bgnd_color = DISP_BGND_RED;
-				fgnd_color = DISP_FGND_RED;
-			}
-			else if (*(char *)pdata == '1')
-			{
-				bgnd_color = DISP_BGND_CYAN;
-				fgnd_color = DISP_FGND_CYAN;
-			}
-			else if (*(char *)pdata == '2')
+			// 'R' 빨강, 'B' 파랑, 'G' 녹색, 'P' 보라
+			if (get_letter == 'B')
 			{
 				bgnd_color = DISP_BGND_BLUE;
 				fgnd_color = DISP_FGND_BLUE;
 			}
-			else if (*(char *)pdata == '3')
+			else if (get_letter == 'G')
 			{
 				bgnd_color = DISP_BGND_GREEN;
 				fgnd_color = DISP_FGND_GREEN;
 			}
-			PC_DispStr(8 + 18 * task_number, 4, "[", DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
-			PC_DispStr(10 + 18 * task_number, 4, "]", DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
-			PC_DispChar(9 + 18 * task_number, 4, get_letter, DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
-
-			if (get_letter == 'W')
+			else if (get_letter == 'P')
 			{
-				for (j = 5; j < 20; j++)
+				bgnd_color = DISP_BGND_PURPLE;
+				fgnd_color = DISP_FGND_PURPLE;
+			}
+			else /* 'R' */
+			{
+				bgnd_color = DISP_BGND_RED;
+				fgnd_color = DISP_FGND_RED;
+			}
+
+			// 화면 칠하기
+			for (j = 5; j < 20; j++)
+			{
+				for (i = 0; i < 80; i++)
 				{
-					for (i = 0; i < 80; i++)
+					PC_DispChar(i, j, ' ', fgnd_color + bgnd_color);
+				}
+			}
+
+			// 충분한 지연
+			OSTimeDlyHMSM(0, 0, 5, 0);
+
+			// task 1~5에게 완료 알림 (0x3E)
+			OSFlagPost(done_grp, DONE_FLAG_ALL, OS_FLAG_SET, &err);
+		}
+	}
+	else if (task_number == 1)
+	{
+		/* ============================= CALCULATION TASK (priority 2) ============================= */
+		for (;;)
+		{
+			// GEN task 4개로부터 숫자 수신 → get_number[]
+			for (i = 0; i < N_GEN; i++)
+			{
+				if (select == 1) // mail box
+				{
+					get_number[i] = *(INT8U *)OSMboxPend(mbox_to_calc[i], 0, &err);
+				}
+				else if (select == 2) // message queue
+				{
+					get_number[i] = *(INT8U *)OSQPend(queue_to_calc, 0, &err);
+				}
+			}
+
+			// 최댓값 찾기 → max_task
+			max = get_number[0];
+			max_task = 0;
+			for (i = 1; i < N_GEN; i++)
+			{
+				if (get_number[i] > max)
+				{
+					max = get_number[i];
+					max_task = i;
+				}
+			}
+
+			// 두 개 이상 같은 숫자가 있는지 검사 (모든 쌍 비교)
+			same = 0;
+			for (i = 0; i < N_GEN; i++)
+			{
+				for (j = i + 1; j < N_GEN; j++)
+				{
+					if (get_number[i] == get_number[j])
 					{
-						PC_DispChar(i, j, ' ', fgnd_color + bgnd_color);
+						same = 1;
 					}
 				}
 			}
-			OSTimeDlyHMSM(0, 0, 5, 0);
+
+			// 같은 숫자가 있으면 'R', 아니면 최댓값 GEN의 문자
+			if (same)
+			{
+				push_letter = 'R';
+			}
+			else
+			{
+				push_letter = gen_letter[max_task];
+			}
+
+			// DISPLAY task에 문자 전송
+			if (select == 1) // mail box
+			{
+				OSMboxPost(mbox_to_disp, &push_letter);
+			}
+			else if (select == 2) // message queue
+			{
+				OSQPost(queue_to_disp, &push_letter);
+			}
+
+			// DISPLAY의 완료 알림 대기 (자기 비트: 1 << task_number)
+			OSFlagPend(done_grp, (OS_FLAGS)(1 << task_number),
+					   OS_FLAG_WAIT_SET_ALL + OS_FLAG_CONSUME, 0, &err);
+		}
+	}
+	else
+	{
+		/* ========================== NUMBER-GENERATION TASK (priority 3~6) ========================= */
+		for (;;)
+		{
+			// 0 ~ 63 랜덤 숫자 생성 → push_number
+			push_number = random(64);
+
+			// 생성한 숫자 화면에 표시 (x = 0, 18, 36, 54)
+			sprintf(s, "%2d", push_number);
+			PC_DispStr(0 + 18 * gen_index, 4, "task", DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
+			PC_DispChar(4 + 18 * gen_index, 4, *(char *)pdata, DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
+			PC_DispStr(6 + 18 * gen_index, 4, s, DISP_FGND_BLACK + DISP_BGND_LIGHT_GRAY);
+
+			// CALC task에 숫자 전송
+			if (select == 1) // mailbox
+			{
+				OSMboxPost(mbox_to_calc[gen_index], &push_number);
+			}
+			else if (select == 2) // message queue
+			{
+				OSQPost(queue_to_calc, &push_number);
+			}
+
+			// DISPLAY의 완료 알림 대기 (자기 비트: 1 << task_number)
+			OSFlagPend(done_grp, (OS_FLAGS)(1 << task_number),
+					   OS_FLAG_WAIT_SET_ALL + OS_FLAG_CONSUME, 0, &err);
 		}
 	}
 }
