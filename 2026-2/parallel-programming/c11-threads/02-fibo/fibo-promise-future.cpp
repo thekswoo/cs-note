@@ -8,8 +8,8 @@ using namespace std;
 
 template <typename value_t, typename index_t>
 
-void fibo(value_t n, promise<value_t> &&result)
-{ // promise객체를 받음
+void fibo(value_t n, promise<value_t> &&result) // promise객체를 받음
+{
     value_t a_0 = 0, a_1 = 1;
     for (index_t index = 0; index < n; index++)
     {
