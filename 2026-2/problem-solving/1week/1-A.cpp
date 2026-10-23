@@ -1,23 +1,27 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-void solution()
-{
-    
-}
-
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-
-    int T;
-    cin >> T;
-
-    while (T--)
+    int t;
+    cin >> t;
+    while (t--)
     {
-        solution();
-    }
+        int n;
+        cin >> n;
+        int mx = 0;
+        int cnt = 0;
+        for (int i = 0; i < n; i++)
+        {
+            int a;
+            cin >> a;
+            if (a > mx)
+                cnt++;
+            mx = max(a, mx);
+        }
 
-    return 0;
+        cout << cnt << '\n';
+    }
 }

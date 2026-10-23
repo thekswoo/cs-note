@@ -1,44 +1,26 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-using ll = long long;
+int main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+    int t; cin >> t;
+    while(t--){
+        int x,n; cin >> x >> n;
 
-void solution()
-{
-    int X, N;
-    cin >> X >> N;
+        vector<vector<int>> dp(n+1,vector<int>(x+1,0));
+        for(int i=1; i<=n; i++) {
+            int a,c;
+            cin >> a >> c;
 
-    vector<vector<int>> dp(N + 1, vector<int>(X + 1, 0));
-
-    for (int i = 1; i <= N; i++)
-    {
-        int a, c;
-        cin >> a >> c;
-
-        for (int w = 0; w <= X; w++)
-        {
-            dp[i][w] = dp[i - 1][w];
-            if (w >= c)
-            {
-                dp[i][w] = max(dp[i][w], dp[i - 1][w - c] + a);
+            for(int w=0; w<=x; w++){
+                dp[i][w] = dp[i-1][w];
+                if(c <= w){
+                    dp[i][w] = max(dp[i-1][w], dp[i-1][w-c] + a);
+                }
             }
         }
+        cout << dp[n][x] << '\n';
     }
-    cout << dp[N][X] << '\n';
-}
-
-int main()
-{
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-
-    int T;
-    cin >> T;
-
-    while (T--)
-    {
-        solution();
-    }
-
-    return 0;
 }

@@ -1,76 +1,63 @@
 #include <bits/stdc++.h>
 using namespace std;
-
-typedef long long ll;
-#define X first
-#define Y second
-ll dx[4] = {1, 0, -1, 0};
-ll dy[4] = {0, 1, 0, -1};
-
-int status[100001];
-const ll INF = 1e18;
-
-void solution()
-{
-    int n, m;
-    cin >> n >> m;
-
-    vector<vector<pair<int, int>>> adj(n + 1);
-    for (int i = 0; i < m; i++)
-    {
-        int u, v, w;
-        cin >> u >> v >> w;
-        adj[u].push_back({v, w}); // 양방향이므로 양쪽에 추가
-        adj[v].push_back({u, w});  
-    }
-
-    // dist[i] = 1번에서 i번까지 현재까지 알려진 최소 시간
-    vector<ll> dist(n + 1, INF); // INF으로 초기화
-
-    // (거리, 정점) 최소 힙 : 거리가 가장 작은 것부터 꺼냄
-    priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<>> pq;
-    // priority_queue<pair<ll,int>> pq; 이렇게 선언하고 음수트릭 해도 됨.
-
-    dist[1] = 0;
-    pq.push({0, 1});
-    while (!pq.empty())
-    {
-        ll d = pq.top().first; // pq에서 거리 가장 짧은 정점의 거리
-        int u = pq.top().second; // pq에서 가장 짧은 정점
-        pq.pop();
-
-        if (d > dist[u])
-            continue; // 이미 더 짧은 경로로 처리된 낡은 정보면 버림
-        if (u == n)
-            break; // N번이 확정되면 바로 종료 가능
-
-        for (auto &e : adj[u]) // u와 인접한 정점들 순회
-        {
-            int v = e.first;
-            int w = e.second;
-            if (dist[u] + w < dist[v])
-            { // 더 빠른 경로 발견 → 갱신(relaxation)
-                dist[v] = dist[u] + w;
-                pq.push({dist[v], v});
-            }
-        }
-    }
-
-    cout << dist[n] << "\n";
-}
+const long long INF = 1e18;
 
 int main()
 {
-    ios::sync_with_stdio(false);
+    ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
-
-    int T;
-    cin >> T;
-
-    while (T--)
+    cout.tie(nullptr);
+    int t;
+    cin >> t;
+    while (t--)
     {
-        solution();
-    }
+        int n, m;
+        cin >> n >> m;
 
-    return 0;
+        vector<vector<pair<int, int>>> adj(n + 1);
+        for (int i = 0; i < m; i++)
+        {
+            int u, v, w; // u-v 가 w 시간 걸림
+            cin >> u >> v >> w;
+            adj[u].push_back({v, w});
+            adj[v].push_back({u, w});
+        }
+
+        vector<long long> dist(n + 1, INF);      // 1번부터 i번까지 거리
+        vector<bool> visited(n + 1, 0);          // i번째 방문 여부
+        priority_queue<pair<long long, int>> pq; // 현재 정점
+
+        dist[1] = 0;
+        pq.push({0, 1});
+
+        while (!pq.empty())
+        {
+            int cur = pq.top().second; // 탐색 정점
+            pq.pop();
+
+            if (visited[cur])
+                continue;     // 이미 방문되었으면 skip
+            visited[cur] = 1; // 방문 여부 표시
+
+            if (cur == n)
+                break; // 끝 정점이면 중단
+
+            for (auto e : adj[cur])
+            {
+                int v = e.first;  // cur주변 정점 번호
+                int w = e.second; // cur부터 주변 정점 거리
+
+                if (visited[v])
+                    continue; // 이미 방문되었으면 skip
+
+                if (dist[cur] + w < dist[v])
+                { // 원래 거리보다 cur까지의 거리 + 주변 정점거리까지 거리가 짧다면 갱신
+                    dist[v] = dist[cur] + w;
+                    pq.push({-dist[v], v}); // 거리 음수로 넣음
+                }
+            }
+        }
+
+        cout << dist[n] << '\n';
+    }
 }
