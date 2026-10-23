@@ -1,98 +1,59 @@
+# 문해기 실습 문제 난이도 정리
 
-http://165.246.21.98/domjudge/
+## 복습 체크리스트
 
-# PS 환경 (VSCode + C++ + DOMjudge) — WSL 기준
+- [x] 1주차 A 조망권 (하)
+- [x] 1주차 B 부품 벨트 (중)
+- [x] 2주차 A 과일 판매 (하)
+- [x] 2주차 B 부스 탐방 (상)
+- [x] 3주차 A 수식 조립 (상)
+- [x] 3주차 B 창고 순회 (하)
+- [x] 4주차 A 배송 허브 (중)
+- [x] 4주차 B 데이터셋 다운로드 (중)
+- [ ] 5주차 A 배터리 충전 (상)
+- [ ] 5주차 B 난방 (중)
+- [x] 6주차 A 유도등 (하)
+- [ ] 6주차 B 경로 우회 (중)
 
-실습실 컴퓨터에서 빠르게 재세팅하기 위한 템플릿.
-학교 PC에 **WSL이 이미 설치**돼 있으므로 리눅스 g++ 로 채점 환경과 동일하게 맞춘다.
+## 하 (구현만 하면 됨)
 
-## I-Class(학교 저장공간)에 올려둘 것
+| 문제 | 주차 | 유형 | 체크 포인트 |
+|---|---|---|---|
+| 조망권 | 1주차 A | 누적 최댓값 | "같은 높이"는 조망권 X → `>` 사용 |
+| 과일 판매 | 2주차 A | 종류별 queue | 빈 queue 체크 |
+| 창고 순회 | 3주차 B | 분할정복 (Z-order) | 사분면 번호 × 구역 크기 누적, 2³⁰까지 → `long long` |
+| 유도등 | 6주차 A | 포함배제 | `N/A + N/B - N/lcm`, `long long` 필수, lcm은 `a / gcd * b` 순서 |
 
-| 파일 | 설명 |
-|---|---|
-| `PS.code-profile` | VSCode 확장·설정 묶음 (아래 "프로필 만들기") |
-| `ps-template/` (또는 zip) | `.vscode` 설정 + `main.cpp` |
+## 중 (정형화된 알고리즘)
 
-> WSL을 쓰면 컴파일러 zip은 필요 없음. WSL이 막혀 있을 때만 Windows 대안(맨 아래) 참고.
+| 문제 | 주차 | 유형 | 체크 포인트 |
+|---|---|---|---|
+| 부품 벨트 | 1주차 B | deque 2개 | `back`/`front` 방향, empty 체크 |
+| 배송 허브 | 4주차 A | 트리 | 루트 폐쇄 → 0, X가 부모의 유일한 자식이면 부모가 새 말단 |
+| 데이터셋 다운로드 | 4주차 B | 0/1 배낭 | 1차원 dp는 용량 **역순** 순회 |
+| 난방 | 5주차 B | 다익스트라 | `pq`에 `{-dist, node}`, 갱신 안 된 노드 skip |
+| 경로 우회 | 6주차 B | 방향 그래프 BFS | 외곽 판정은 원래 `adj` 기준 |
 
----
+## 상 (아이디어가 핵심)
 
-## 프로필 만들기 (집에서 1회)
+| 문제 | 주차 | 유형 | 체크 포인트 |
+|---|---|---|---|
+| 부스 탐방 | 2주차 B | 그리디 + max-heap | 다 받고, 음수 되면 제일 비싼 것 취소 |
+| 수식 조립 | 3주차 A | 구간 DP | 구간마다 **max와 min 둘 다** 저장 (음수 × 음수 = 최대) |
+| 배터리 충전 | 5주차 A | 그리디 (한계 이득) | 기기마다 `b`가 ⌊(100-a)/b⌋번, `(100-a)%b`가 1번 → 큰 이득부터 N개, 합은 `long long` |
 
-1. VSCode 왼쪽 아래 톱니바퀴 → **프로필** → **새 프로필 만들기** → 이름 `PS`
-2. `PS` 프로필 상태에서 확장 설치:
-   - `ms-vscode-remote.remote-wsl` (WSL)
-   - `ms-vscode.cpptools` (C/C++)
-   - `DivyanshuAgrawal.competitive-programming-helper` (cph)
-3. 톱니바퀴 → 프로필 → `PS` 옆 `...` → **내보내기** → `PS.code-profile` 저장 → I-Class 업로드
+## 주차별 한눈에 보기
 
----
+| 주차 | A | B |
+|---|---|---|
+| 1 | 조망권 (하) | 부품 벨트 (중) |
+| 2 | 과일 판매 (하) | 부스 탐방 (상) |
+| 3 | 수식 조립 (상) | 창고 순회 (하) |
+| 4 | 배송 허브 (중) | 데이터셋 다운로드 (중) |
+| 5 | 배터리 충전 (상) | 난방 (중) |
+| 6 | 유도등 (하) | 경로 우회 (중) |
 
-## 실습실 재세팅 체크리스트 (5분)
+## 공부 우선순위
 
-### 1. WSL 안에 컴파일러 준비 (배포판 새로 깔렸으면 1회)
-WSL 터미널(Ubuntu)에서:
-```
-sudo apt update && sudo apt install -y g++ gdb
-g++ --version
-```
-> 학교 PC가 로그아웃 시 사용자 프로필을 초기화하면 WSL도 초기화될 수 있음 →
-> 이 명령을 매번 실행 (인터넷 되면 1~2분).
-
-### 2. I-Class에서 `PS.code-profile` + `ps-template` 다운로드
-
-### 3. 템플릿을 WSL 안에 복사 (권장: 리눅스 홈, `/mnt/c` 보다 빠름)
-WSL 터미널에서:
-```
-mkdir -p ~/ps && cp -r /mnt/c/Users/<Windows계정>/Downloads/ps-template ~/ps/
-```
-
-### 4. VSCode
-1. 톱니바퀴 → 프로필 → **가져오기** → `PS.code-profile` (확장 자동 설치)
-2. 명령 팔레트(`Ctrl+Shift+P`) → **WSL: Connect to WSL** (왼쪽 아래가 `WSL: Ubuntu` 로 바뀜)
-3. `파일 → 폴더 열기` → `~/ps/ps-template`
-4. 첫 연결 시 cpptools / cph 가 "WSL 쪽에" 자동 설치됨 (30초)
-5. 확인: 통합 터미널이 bash 인지, `g++ --version` 되는지
-
-### 5. (사용 후) 공용 PC 정리
-프로필 삭제 or 기본 프로필로 전환, VSCode 계정 로그아웃
-
----
-
-## 문제 풀이 흐름
-
-1. `main.cpp` 편집 (문제마다 `1000.cpp` 처럼 복사 추천)
-2. `Ctrl+Alt+B` → 오른쪽 cph 패널
-   - `+ Test Case` 로 입력 / 기대 출력 붙여넣기 → `Run All` → 초록(AC) 확인
-   - 또는 브라우저 **Competitive Companion** 확장으로 예제 자동 로드
-3. 통과하면 DOMjudge 웹에 해당 `.cpp` 제출
-
-### 단축키
-| 키 | 동작 |
-|---|---|
-| `Ctrl+Alt+B` | cph: 컴파일 + 전체 테스트케이스 실행 |
-| `Ctrl+Alt+D` | cph: 테스트케이스 패널 토글 |
-| `Ctrl+Shift+B` | (cph 없이) g++ 빌드만 |
-| `F5` | 디버깅 (중단점) |
-
----
-
-## DOMjudge C++ 표준 맞추기
-
-기본 `-std=c++17`. c++17 코드는 c++20 채점기에서도 그대로 동작하므로 보통 안 바꿔도 됨.
-과목/대회가 c++20이고 신문법을 써야 할 때만 아래 3곳을 `c++20` 으로:
-- `.vscode/settings.json` → `cph.language.cpp.Args`
-- `.vscode/tasks.json` → `args` 의 `-std=c++17`
-- `.vscode/settings.json` → `C_Cpp.default.cppStandard`
-
----
-
-## Windows 대안 (WSL이 막혀 있을 때)
-
-1. winlibs.com 에서 UCRT/GCC 최신 Win64 **zip** 다운로드 → I-Class 업로드
-2. 실습실: `C:\Users\<계정>\mingw64` 에 압축 해제 →
-   사용자 PATH 에 `...\mingw64\bin` 추가 → VSCode 재시작
-3. `.vscode` 파일 3개를 Windows용으로 되돌리기:
-   - `tasks.json` / `launch.json`: 출력 경로에 `.exe` 추가, `/` → `\\`,
-     `miDebuggerPath` 를 `gdb.exe` 로
-   - `settings.json`: `compilerPath` 를 `g++` 로
+- **중** 단계 확실히 맞히기 → 다익스트라, 배낭 DP는 템플릿처럼 바로 짤 수 있게
+- **상** 단계는 핵심 아이디어 한 줄씩 외워가기
