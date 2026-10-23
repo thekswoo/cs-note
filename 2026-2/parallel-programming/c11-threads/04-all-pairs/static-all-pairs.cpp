@@ -130,7 +130,7 @@ int main()
 
     // 2) static block-cyclic
     const index_t num_threads = std::thread::hardware_concurrency(); // 내 CPU 논리
-    parallel_all_pairs(mnist, par_result, rows, cols, num_threads, chunk_size); 코어 수
+    parallel_all_pairs(mnist, par_result, rows, cols); // 코어 수
     const index_t chunk_size = 64 / sizeof(value_t);                 // float → 16
     auto t2 = std::chrono::high_resolution_clock::now();
 
